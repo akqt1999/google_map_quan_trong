@@ -8,7 +8,11 @@ import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:prefs/prefs.dart';
 import 'package:flutter/widgets.dart';
+import 'package:testspappp/address_seach.dart';
+import 'package:testspappp/place_service.dart';
+import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
+import 'address_input.dart';
 import 'lcoation_service.dart';
 import 'package:image/image.dart' as image;
 
@@ -24,8 +28,7 @@ class MapSample extends StatefulWidget {
 
 class MapSampleState extends State<MapSample> {
   Completer<GoogleMapController> _controller = Completer();
-  TextEditingController _destinationController = TextEditingController();
-  TextEditingController _originController = TextEditingController();
+
 
   static final CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(16.038988698505317, 108.21491418372946),
@@ -77,11 +80,23 @@ class MapSampleState extends State<MapSample> {
   List<LatLng> polygonLatLngs = <LatLng>[];
   List<LatLng>polylineLatLngs=<LatLng>[];
 
+  final _destinationController = TextEditingController();
+  final _originController = TextEditingController(); //10:28
+  
   int _polygonIdCouter = 0;
   int _polylineIdCouter = 0;
   int _clickMapCouter = 0;
   int _markerCouter=0;
   String markerId="";
+
+  
+  @override
+  void dispose() {
+    _destinationController.dispose();
+    super.dispose();
+  }
+
+
 
   @override
   Future<void> initState()  {
@@ -120,6 +135,19 @@ class MapSampleState extends State<MapSample> {
 
   }
 
+
+  _search( )async{
+   final sessionToken =Uuid().v4();
+   print("sessionToken:$sessionToken");
+    final Suggestion result=await showSearch(context: context,
+        delegate: AddressSearch(sessionToken));
+    if(result!=null){
+      setState(() {
+        _originController.text=result.description;
+      });
+    }
+  }
+
   void _setPolygson() {
     final String polygonId = 'polygons_$_polygonIdCouter';
     _polygonIdCouter++;
@@ -149,6 +177,8 @@ class MapSampleState extends State<MapSample> {
     ));
   }
 
+
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -164,58 +194,70 @@ class MapSampleState extends State<MapSample> {
               Expanded(
                   child: Column(
                 children: [
+
                   Container(
                     padding: const EdgeInsets.all(3),
-                    child: TextFormField(
+                    child:  AddressInput(
                       controller: _originController,
-                      textCapitalization: TextCapitalization.words,
-                      decoration: InputDecoration(
-                          hintText: 'Origin',
-                          label: Text('Origin'),
-                          border: OutlineInputBorder(
-                              borderRadius: const BorderRadius.all(
-                                  const Radius.circular(2)))),
-                      onChanged: (value) {},
+                      iconData: Icons.gps_fixed,
+                      hintText: "origin",
+                      enabled: true,
+                      onTap:_search,
+
                     ),
                   ),
                   Container(
                     padding: const EdgeInsets.all(3),
-                    child: TextFormField(
+                    child:  AddressInput(
                       controller: _destinationController,
-                      decoration: InputDecoration(
-                          hintText: 'destination',
-                          label: Text('desination'),
-                          border: OutlineInputBorder(
-                            borderRadius: const BorderRadius.all(
-                                const Radius.circular(2)),
-                          )),
+                      iconData: Icons.directions,
+                      hintText: "destination",
+                   enabled: true,
+                      onTap: ()async{
+                          final sessionToken =Uuid().v4();
+                          final Suggestion result=await showSearch(context: context,
+                              delegate:AddressSearch(sessionToken));
+                          _destinationController.text=result.description;
+                      },
                     ),
                   ),
                 ],
               )),
-              IconButton(
-                  onPressed: () async {
-                    // da nang , quang nam
-                    var directions = await LocationService().getDirections(
-                        _originController.text, _destinationController.text);
+              Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children:  [
+                  IconButton(
+                      onPressed: () async {
+                        // da nang , quang nam
+                        var directions = await LocationService().getDirections(
+                            _originController.text, _destinationController.text);
 
-                    _goToPlace(
-                        directions['start_location']['lat'],
-                        directions['start_location']['lng'],
-                        directions['bounds_ne'],
-                        directions['bounds_sw']);
-                    print(directions['polyline_decoded']);
+                        _goToPlace(
+                            directions['start_location']['lat'],
+                            directions['start_location']['lng'],
+                            directions['bounds_ne'],
+                            directions['bounds_sw']);
+                        print(directions['polyline_decoded']);
 
-                    setState(() {
-                      _setPolyline(directions['polyline_decoded']);
-                    });
+                        setState(() {
+                          _setPolyline(directions['polyline_decoded']);
+                        });
 
-                    // da nang , quang nam
-                    //var direction = await LocationService()
-                    //      .getDirections();
-                    // _goToPlace(place);
-                  },
-                  icon: Icon(Icons.search))
+                        // da nang , quang nam
+                        //var direction = await LocationService()
+                        //      .getDirections();
+                        // _goToPlace(place);
+                      },
+                      icon: Icon(Icons.search)),
+                  const InkWell(child: Icon(
+                    Icons.add,
+                    color: Colors.black,
+                    size: 28,
+                  ),)
+
+                ],
+              ),
             ],
           ),
           Expanded(

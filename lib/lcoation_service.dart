@@ -4,6 +4,7 @@ import 'package:http/http.dart' as http;
 import 'dart:convert'as convert;
 class LocationService{
   final String key='AIzaSyAxXpZ12j1LPRyLe1G0V1bJSx1wn1tgDZQ';
+
   Future<String>getPlaceId(String input)async{
     final String url='https://maps.googleapis.com/maps/api/place/findplacefromtext/json?input=$input&inputtype=textquery&key=$key';
     //
@@ -80,5 +81,7 @@ class LocationService{
 
     return "";
   }
+
+
 
 }

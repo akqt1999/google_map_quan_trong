@@ -43,6 +43,9 @@ dependencies:
   image: ^3.1.0
   flutter_svg: ^1.0.0
   places_service: ^0.1.0
+  uuid: ^3.0.4
+  geolocator: 7.0.3
+
 
 dev_dependencies:
   flutter_test:
