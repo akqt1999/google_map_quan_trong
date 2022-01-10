@@ -22,22 +22,28 @@ class PlaceApiProvider {
 
   final sessionToken;
 
-  static final String androidKey = 'AIzaSyAxXpZ12j1LPRyLe1G0V1bJSx1wn1tgDZQ';
-  static final String iosKey = 'AIzaSyAxXpZ12j1LPRyLe1G0V1bJSx1wn1tgDZQ';
+  static final String androidKey = 'AIzaSyCOYCXNdNdBhCv-H8qokR89JuzlyorAzmM';
+  static final String iosKey = 'AIzaSyCOYCXNdNdBhCv-H8qokR89JuzlyorAzmM';
+  static final String keyGoong='j0UIH8CE8gcnKzql7Zfd2F9LT6Lur7GaaXGt34My';
   final apiKey = Platform.isAndroid ? androidKey : iosKey;
 
   Future<List<Suggestion>> fetchSuggestions(String input) async {
     final request =
         'https://maps.googleapis.com/maps/api/place/autocomplete/json?input=$input&types=address&language=vn-Vn&components=country:vn&key=$apiKey&sessiontoken=$sessionToken';
-    final response = await http.get(Uri.parse(request));
+
+    final request2 = 'https://rsapi.goong.io/Place/AutoComplete?api_key=$keyGoong&input=$input&more_compound=true&types=address&language=vn-Vn&components=country:vn';
+
+    final response = await http.get(Uri.parse(request2));
 
     if (response.statusCode == 200) {
       final result = json.decode(response.body);
       if (result['status'] == 'OK') {
         // compose suggestions in a list
+        print('fidshisdfyguigdf__${result['predictions'] }');
+
         return result['predictions']
             .map<Suggestion>((p) => Suggestion(p['place_id'],
-            p['description'].replaceAll("District","").replaceAll("Province","")))// co nghia la gan gia tri vo cho cai item roi tra ve list
+            p['description']))// co nghia la gan gia tri vo cho cai item roi tra ve list
             .toList();
       }
       if (result['status'] == 'ZERO_RESULTS') {

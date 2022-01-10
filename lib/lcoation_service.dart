@@ -1,4 +1,6 @@
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
+import 'package:geolocator/geolocator.dart';
+
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert'as convert;
@@ -25,6 +27,7 @@ class LocationService{
        print("place : ${results}");
        return results;
   }
+
   Future<Map<String,dynamic>>getDirections(String origin,String destination)async{
       final String url=
           'https://maps.googleapis.com/maps/api/directions/json?origin=$origin&destination=$destination&key=$key';
@@ -37,7 +40,8 @@ class LocationService{
         'end_location':json['routes'][0]['legs'][0]['end_location'],
         'polyline':json['routes'][0]['overview_polyline']['points'],
         'polyline_decoded':PolylinePoints().
-        decodePolyline( json['routes'][0]['overview_polyline']['points'])
+        decodePolyline( json['routes'][0]['overview_polyline']['points']),
+
       };
       print(results);
       return results;
@@ -51,6 +55,8 @@ class LocationService{
 
     final String url=
         'https://maps.googleapis.com/maps/api/directions/json?origin=$oriLat,$oriLng&destination=$desLat,$desLng&key=$key';
+    String url2='https://rsapi.goong.io/Direction?origin=21.046623224000029,105.790168203000060&destination=21.046666732000062,105.790169569000060&vehicle=bike&api_key=j0UIH8CE8gcnKzql7Zfd2F9LT6Lur7GaaXGt34My';
+
     var response=await http.get(Uri.parse(url));
     var json =convert.jsonDecode(response.body);
     var results={
@@ -59,10 +65,19 @@ class LocationService{
       'start_location':json['routes'][0]['legs'][0]['start_location'],
       'end_location':json['routes'][0]['legs'][0]['end_location'],
       'polyline':json['routes'][0]['overview_polyline']['points'],
+      'distance':json['routes'][0]['legs'][0]['distance'],
       'polyline_decoded':PolylinePoints().
-      decodePolyline( json['routes'][0]['overview_polyline']['points'])
+      decodePolyline( json['routes'][0]['overview_polyline']['points']),
+
     };
-    print(results);
+    print("fdsafds__$results");
+
+    print('fdsafds__: ${json['routes'][0]['legs'][0]['distance']['value']}');
+    print('fdsafds__: ${json['routes'][0]['legs'][0]['distance']['text']}');
+
+    print('fdsafds__: ${json['routes'][0]['legs'][0]['duration']['value']}');
+    print('fdsafds__: ${json['routes'][0]['legs'][0]['duration']['text']}');
+
     return results;
 
   }
@@ -82,6 +97,13 @@ class LocationService{
     return "";
   }
 
+  void getCurrentLovcation()async{
+    print('lastPositionasd');
+    var position=await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    var lastPosition=await Geolocator.getLastKnownPosition();
+    print('lastPosition:$lastPosition');
+    print('position123:$position');
 
+  }
 
 }
