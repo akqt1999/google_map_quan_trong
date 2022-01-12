@@ -57,7 +57,7 @@ class LocationService{
         'https://maps.googleapis.com/maps/api/directions/json?origin=$oriLat,$oriLng&destination=$desLat,$desLng&key=$key';
     String url2='https://rsapi.goong.io/Direction?origin=21.046623224000029,105.790168203000060&destination=21.046666732000062,105.790169569000060&vehicle=bike&api_key=j0UIH8CE8gcnKzql7Zfd2F9LT6Lur7GaaXGt34My';
 
-    var response=await http.get(Uri.parse(url));
+    var response=await http.get(Uri.parse(url2));
     var json =convert.jsonDecode(response.body);
     var results={
       'bounds_ne':json['routes'][0]['bounds']['northeast'],
