@@ -48,5 +48,5 @@ class AddressSearch extends SearchDelegate<Suggestion>{
 
       );
   }
-  
+
 }
