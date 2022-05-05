@@ -7,22 +7,26 @@ import 'package:flutter/services.dart';
 import 'package:flutter_google_places/flutter_google_places.dart';
 import 'package:flutter_polyline_points/flutter_polyline_points.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:get/get.dart';
 import 'package:google_api_headers/google_api_headers.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_maps_webservice/places.dart';
 
 import 'package:prefs/prefs.dart';
 import 'package:flutter/widgets.dart';
+import 'package:provider/provider.dart';
 import 'package:testspappp/address_seach.dart';
 import 'package:testspappp/place_service.dart';
+import 'package:testspappp/provider/app_state.dart';
+import 'package:testspappp/service/GeoServices.dart';
 import 'package:uuid/uuid.dart';
 import 'dart:ui' as ui;
 import 'address_input.dart';
+import 'controller/user_controller.dart';
 import 'lcoation_service.dart';
 import 'package:image/image.dart' as image;
 
 import 'package:flutter_svg/flutter_svg.dart';
-
 
 class MapSample extends StatefulWidget {
   @override
@@ -32,9 +36,8 @@ class MapSample extends StatefulWidget {
 final searchScaffoldKey = GlobalKey<ScaffoldState>();
 final homeScaffoldKey = GlobalKey<ScaffoldState>();
 
-
 class MapSampleState extends State<MapSample> {
-  Completer<GoogleMapController> _controller=Completer();
+  Completer<GoogleMapController> _controller = Completer();
 
   static final CameraPosition _kLake = CameraPosition(
       bearing: 192.8334901395799,
@@ -57,10 +60,7 @@ class MapSampleState extends State<MapSample> {
 
   static final Polyline _kpolyline = Polyline(
       polylineId: PolylineId('_kpolyline'),
-      points: [
-        LatLng(16.038988698505317, 108.21491418372946),
-        LatLng(16.038824, 108.215279)
-      ],
+      points: [LatLng(16.038988698505317, 108.21491418372946), LatLng(16.038824, 108.215279)],
       width: 5,
       color: Colors.red);
 
@@ -94,6 +94,8 @@ class MapSampleState extends State<MapSample> {
   static LatLng _initPosition;
   static LatLng _lastMapPosition = _initPosition;
 
+  //controller
+  UserController _userController=Get.put(UserController());
 
   @override
   void dispose() {
@@ -101,28 +103,44 @@ class MapSampleState extends State<MapSample> {
     super.dispose();
   }
 
-
+  LocationSettings _locationSettings=LocationSettings(accuracy: LocationAccuracy.high,distanceFilter: 2);
   @override
   void initState() {
-    // _setMarker(LatLng(16.038824, 108.215279), "cai lon be nhu");
+
+
     super.initState();
     _getCurrentLocation();
 
     if (_initPosition != null) {
-      _setMarker(
-          poin: _initPosition,
-          nameProvince: "xin chao",
-          nameMarker: "do\nan");
+      _setMarker(poin: _initPosition, nameProvince: "xin chao", nameMarker: "do\nan");
     }
+    // Geolocator.getPositionStream(locationSettings: _locationSettings).listen((position) {
+    //   moveCameraCenterScreen(position);
+    //   Map<String, dynamic> currentLocation = {'lat': position.latitude, 'long': position.longitude};
+    //   _userController.updateLocationCurrentUser(currentLocation);
+    // });
+    //_userController.driverStream2();
+    // _userController.driverStream().listen((event) {
+    //   event.docChanges.forEach((change) async{
+    //       print('vitrii_ ${change.doc.data()}');
+    //   });
+    // });
+
+  }
+
+  moveCameraCenterScreen(Position position) async {
+    final GoogleMapController controller = await _controller.future;
+    controller.animateCamera(CameraUpdate.newCameraPosition(CameraPosition(
+      target: LatLng(position.latitude, position.longitude),
+      zoom: 18.0
+    )));
   }
 
   _onCameraMove(CameraPosition position) {
     _lastMapPosition = position.target;
   }
 
-
-  Future<void> _setMarker(
-      {LatLng poin, String nameProvince, String nameMarker}) async {
+  Future<void> _setMarker({LatLng poin, String nameProvince, String nameMarker}) async {
     String markerId = "markerID_$_markerCouter";
     _markerCouter++;
 
@@ -144,12 +162,10 @@ class MapSampleState extends State<MapSample> {
     });
   }
 
-
   _search() async {
     final sessionToken = Uuid().v4();
     print("sessionToken:$sessionToken");
-    final Suggestion result = await showSearch(
-        context: context, delegate: AddressSearch(sessionToken));
+    final Suggestion result = await showSearch(context: context, delegate: AddressSearch(sessionToken));
     if (result != null) {
       setState(() {
         _originController.text = result.description;
@@ -179,15 +195,9 @@ class MapSampleState extends State<MapSample> {
       points: points
           .map(
             (e) => LatLng(e.latitude, e.longitude),
-      )
+          )
           .toList(),
     ));
-  }
-
-  _onMapCreated(GoogleMapController controller) {
-    setState(() {
-      _controller.complete(controller);
-    });
   }
 
   void _getCurrentLocation() async {
@@ -209,12 +219,10 @@ class MapSampleState extends State<MapSample> {
 
     if (permission == LocationPermission.deniedForever) {
       // Permissions are denied forever, handle appropriately.
-      print(
-          'loii_: Location permissions are permanently denied, we cannot request permissions.');
+      print('loii_: Location permissions are permanently denied, we cannot request permissions.');
     }
 
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.medium);
+    Position position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
     print("loii_: ${position.latitude},${position.longitude}");
     setState(() {
       _initPosition = new LatLng(position.latitude, position.longitude);
@@ -223,153 +231,150 @@ class MapSampleState extends State<MapSample> {
 
   @override
   Widget build(BuildContext context) {
+    Provider.of<GeoProvider>(context, listen: false);
+    AppStateProvider appState=Provider.of(context);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-
-    });
+    WidgetsBinding.instance.addPostFrameCallback((_) async {});
     return Scaffold(
       appBar: AppBar(
         title: Text("bu lon be nhu"),
       ),
       body: _initPosition == null
-          ? Center(child: Text('loading map...'),)
+          ? Center(
+              child: Text('loading map...'),
+            )
           : Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              //Expanded co nghia la no se lay tat cac cai khaong casch con lai
-              Expanded(
-                  child: Column(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        child: AddressInput(
-                          controller: _originController,
-                          iconData: Icons.gps_fixed,
-                          hintText: "origin",
-                          enabled: true,
-                          onTap: _search,
-                        ),
-                      ),
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        child: AddressInput(
-                          controller: _destinationController,
-                          iconData: Icons.directions,
-                          hintText: "destination",
-                          enabled: true,
-                          onTap: () async {
-                            final sessionToken = Uuid().v4();
-                            final Suggestion result = await showSearch(
-                                context: context,
-                                delegate: AddressSearch(sessionToken));
-                            _destinationController.text = result.description;
-                          },
-                        ),
-                      ),
-                    ],
-                  )),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  IconButton(
-                      onPressed: () async {
-                        // da nang , quang nam
-                        var directions = await LocationService().getDirections(
-                            _originController.text,
-                            _destinationController.text);
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                // Row(
+                //   children: [
+                //     //Expanded co nghia la no se lay tat cac cai khaong casch con lai
+                //     Expanded(
+                //         child: Column(
+                //           children: [
+                //             Container(
+                //               padding: const EdgeInsets.all(3),
+                //               child: AddressInput(
+                //                 controller: _originController,
+                //                 iconData: Icons.gps_fixed,
+                //                 hintText: "origin",
+                //                 enabled: true,
+                //                 onTap: _search,
+                //               ),
+                //             ),
+                //             Container(
+                //               padding: const EdgeInsets.all(3),
+                //               child: AddressInput(
+                //                 controller: _destinationController,
+                //                 iconData: Icons.directions,
+                //                 hintText: "destination",
+                //                 enabled: true,
+                //                 onTap: () async {
+                //                   final sessionToken = Uuid().v4();
+                //                   final Suggestion result = await showSearch(
+                //                       context: context,
+                //                       delegate: AddressSearch(sessionToken));
+                //                   _destinationController.text = result.description;
+                //                 },
+                //               ),
+                //             ),
+                //           ],
+                //         )),
+                //     Column(
+                //       mainAxisAlignment: MainAxisAlignment.start,
+                //       crossAxisAlignment: CrossAxisAlignment.start,
+                //       children: [
+                //         IconButton(
+                //             onPressed: () async {
+                //               // da nang , quang nam
+                //               var directions = await LocationService().getDirections(
+                //                   _originController.text,
+                //                   _destinationController.text);
+                //
+                //               _goToPlace(
+                //                   directions['start_location']['lat'],
+                //                   directions['start_location']['lng'],
+                //                   directions['bounds_ne'],
+                //                   directions['bounds_sw']);
+                //
+                //               print(directions['polyline_decoded']);
+                //
+                //               setState(() {
+                //                 _setPolyline(directions['polyline_decoded']);
+                //               });
+                //
+                //               // da nang , quang nam
+                //               //var direction = await LocationService()
+                //               //      .getDirections();
+                //               // _goToPlace(place);
+                //             },
+                //             icon: Icon(Icons.search)),
+                //         InkWell(
+                //           child: const Icon(
+                //             Icons.add,
+                //             color: Colors.black,
+                //             size: 28,
+                //           ),
+                //           onTap: () {
+                //             print("cc");
+                //             //    LocationService().getCurrentLovcation();
+                //           },
+                //         )
+                //       ],
+                //     ),
+                //   ],
+                // ),
+                Expanded(
+                    flex: 5,
+                    child: GoogleMap(
+                      //  polygons: {_kpolygon},
+                      //markers: {_kGooglePlexMarker, _kPlexMarker},
+                      //mapType: MapType.normal,
+                      //polylines: {_kpolyline},
+                      mapType: MapType.normal,
+                      compassEnabled: true,
+                      rotateGesturesEnabled: true,
+                      myLocationEnabled: true,
+                      myLocationButtonEnabled: true,
+                      polylines: _polylines,
+                      polygons: _polygons,
+                      markers: appState.markers,
+                      zoomGesturesEnabled: true,
+                      onCameraMove: _onCameraMove,
+                      initialCameraPosition: CameraPosition(target: _initPosition, zoom: 18),
+                      onMapCreated: (GoogleMapController controller) {
+                        _controller.complete(controller);
+                      },
+                      onTap: (point) async {
+                        _clickMapCouter++;
+                        polylineLatLngs.add(point);
+                        if (_clickMapCouter == 2) {
+                          var directions = await LocationService()
+                              .getDirectionsByLatLng(origin: polylineLatLngs[0], destination: polylineLatLngs[1]);
+                          _setPolyline(directions['polyline_decoded']);
 
-                        _goToPlace(
-                            directions['start_location']['lat'],
-                            directions['start_location']['lng'],
-                            directions['bounds_ne'],
-                            directions['bounds_sw']);
+                          print('fads${directions['distance']['text']}');
+                        }
+                        // var directions=await LocationService().
+                        //  getDirectionsByLatLng(destination: point,origin: point);
 
-                        print(directions['polyline_decoded']);
+                        var detailAddress =
+                            await LocationService().getNameAddressByLatLng(lat: point.latitude, lng: point.longitude);
 
                         setState(() {
-                          _setPolyline(directions['polyline_decoded']);
+                          _setMarker(poin: point, nameProvince: detailAddress, nameMarker: 'do\nan');
+
+                          //polygonLatLngs.add(point);
+                          // _setPolygson();
                         });
-
-                        // da nang , quang nam
-                        //var direction = await LocationService()
-                        //      .getDirections();
-                        // _goToPlace(place);
                       },
-                      icon: Icon(Icons.search)),
-                  InkWell(
-                    child: const Icon(
-                      Icons.add,
-                      color: Colors.black,
-                      size: 28,
-                    ),
-                    onTap: () {
-                      print("cc");
-                      //    LocationService().getCurrentLovcation();
-                    },
-                  )
-                ],
-              ),
-            ],
-          ),
-          Expanded(
-              flex: 5,
-              child: GoogleMap(
-                //  polygons: {_kpolygon},
-                //markers: {_kGooglePlexMarker, _kPlexMarker},
-                //mapType: MapType.normal,
-                //polylines: {_kpolyline},
-                polylines: _polylines,
-                polygons: _polygons,
-                markers: _markers,
-                zoomGesturesEnabled: true,
-                onCameraMove: _onCameraMove,
-                initialCameraPosition: CameraPosition(
-                    target: _initPosition,
-                    zoom: 18
-                ),
-                onMapCreated: (GoogleMapController controller){
-                  _controller.complete(controller);
-                },
-                onTap: (point) async {
-                  _clickMapCouter++;
-                  polylineLatLngs.add(point);
-                  if (_clickMapCouter == 2) {
-                    var directions = await LocationService()
-                        .getDirectionsByLatLng(
-                        origin: polylineLatLngs[0],
-                        destination: polylineLatLngs[1]);
-                    _setPolyline(directions['polyline_decoded']);
-
-                    print('fads${directions['distance']['text']}');
-                  }
-                  // var directions=await LocationService().
-                  //  getDirectionsByLatLng(destination: point,origin: point);
-
-                  var detailAddress = await LocationService()
-                      .getNameAddressByLatLng(
-                      lat: point.latitude, lng: point.longitude);
-
-                  setState(() {
-                    _setMarker(
-                        poin: point,
-                        nameProvince: detailAddress,
-                        nameMarker: 'do\nan');
-
-                    //polygonLatLngs.add(point);
-                    // _setPolygson();
-                  });
-                },
-              ))
-        ],
-      ),
+                    ))
+              ],
+            ),
     );
   }
 
-  Future<void> _goToPlace(double lat, double lng, Map<String, dynamic> boundsNe,
-      Map<String, dynamic> boundsSw) async {
+  Future<void> _goToPlace(double lat, double lng, Map<String, dynamic> boundsNe, Map<String, dynamic> boundsSw) async {
     // final double lat = place['geometry']['location']['lat'];
     //   final double lng = place['geometry']['location']['lng'];
 
@@ -384,8 +389,7 @@ class MapSampleState extends State<MapSample> {
     //_setMarker(LatLng(lat, lng), nameProvince);
     controller.animateCamera(CameraUpdate.newLatLngBounds(
         LatLngBounds(
-            southwest: LatLng(boundsSw['lat'], boundsSw['lng']),
-            northeast: LatLng(boundsNe['lat'], boundsNe['lng'])),
+            southwest: LatLng(boundsSw['lat'], boundsSw['lng']), northeast: LatLng(boundsNe['lat'], boundsNe['lng'])),
         25));
   }
 
@@ -394,13 +398,11 @@ class MapSampleState extends State<MapSample> {
     controller.animateCamera(CameraUpdate.newCameraPosition(_kLake));
   }
 
-  Future<BitmapDescriptor> bitmapDescriptorFromSvgAsset(BuildContext context,
-      String price) async {
+  Future<BitmapDescriptor> bitmapDescriptorFromSvgAsset(BuildContext context, String price) async {
     // Read SVG file as String
     // String svgString = await DefaultAssetBundle.of(context).loadString(assetName,);
     // Create DrawableRoot from SVG String
-    String svgStrings =
-    '''<svg width="75" height="50" xmlns="http://www.w3.org/2000/svg">
+    String svgStrings = '''<svg width="75" height="50" xmlns="http://www.w3.org/2000/svg">
 
   <path stroke="#000" id="svg_1" d="m0.823 12.223c-1.368-2.628-1.008-5.004 0.684-6.984 1.8-2.088 4.932-3.78 9.792-5.22 6.66 4.68 13.644 9.864 21.636 15.696 7.884 5.904
     20.124 14.436 25.452 19.188 5.148 4.428 2.484 0.108 5.616 8.028 3.096 7.992 7.344 20.952 12.888 39.456 8.713-0.36 17.1 0.468 25.848 2.088
@@ -480,7 +482,7 @@ class MapSampleState extends State<MapSample> {
 //--------
 
     String svgStringsvipnhat =
-    '''<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+        '''<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
     viewBox="-290 0 1250 1250" enable-background="new 0 0 1000 1000" xml:space="preserve">
 <metadata> Svg Vector Icons : http://www.onlinewebfonts.com/icon </metadata>
 <g><g transform="translate(0.000000,511.000000) scale(0.100000,-0.100000)">
@@ -494,15 +496,14 @@ class MapSampleState extends State<MapSample> {
  ''';
     //----
     String svgStringsvipnhat3 =
-    '''<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+        '''<svg version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
 <g><g transform="translate(0.000000,511.000000) scale(0.100000,-0.100000)"><path d="M7085.4,4032.4l-984.8-975.2l-128.2-440.4l-128.2-438l-556.5,4.8L4731,2191l-14.5,145.2c-33.9,355.7-181.5,660.6-442.8,921.9c-191.2,191.2-401.7,317-655.8,396.8c-239.6,75-634,75-871.1,0c-484-152.4-856.6-508.1-1023.6-972.7c-75-212.9-99.2-590.4-53.2-825.1c84.7-435.5,416.2-863.9,830-1074.4c142.8-70.2,450.1-152.4,578.3-152.4h91.9v-2710.1V-4790H5106h1935.8v3484.4v3484.4l-394.4,4.8l-396.9,7.3l96.8,333.9l96.8,331.5l953.4,946.1l955.8,948.5l-128.2,128.3c-70.2,72.6-135.5,130.7-142.8,130.7C8075.1,5007.6,7627.4,4569.6,7085.4,4032.4z M3363.8,3316.2c312.1-48.4,655.8-280.7,813-546.9c84.7-142.8,154.9-365.4,154.9-486.4v-104H3751h-580.7v-580.7v-580.7H3088c-130.7,0-379.9,87.1-537.2,188.7c-186.3,121-309.7,263.8-416.2,488.8c-77.4,157.3-89.5,208.1-96.8,406.5c-7.3,167,0,268.6,31.5,382.3c108.9,406.5,500.9,759.8,912.3,830C3160.6,3342.8,3187.2,3342.8,3363.8,3316.2z M5711,1726.4c-12.1-38.7-208.1-699.3-435.6-1471.2c-227.5-771.9-423.5-1439.8-438-1480.9l-26.6-79.8h-626.7h-626.7V243.1v1548.6h1086.5h1088.9L5711,1726.4z M6654.7,243.1v-1548.6h-716.3c-670.3,0-716.2,2.4-706.6,43.6c7.3,21.8,212.9,718.7,457.3,1548.6L6132,1791.7h261.3h261.3V243.1z M4694.7-1702.4c0-7.3-118.6-416.2-266.2-912.2c-145.2-496.1-266.2-917.1-266.2-934c0-26.6,331.5-142.8,350.9-123.4c4.8,4.8,140.3,450.1,297.6,987.3l290.4,980l776.7,7.3l776.8,4.8v-1355.1v-1355.1H5106H3557.4v1355.1v1355.1H4126C4438.2-1692.7,4694.7-1697.6,4694.7-1702.4z"/></g></g>
   <text  y="19.77155" x="24.02531" fill="#000000">$price</text>
 </svg>
  ''';
 
     //------
-    String svgStringsvipnhat2 =
-    '''<svg width="75" height="50" xmlns="http://www.w3.org/2000/svg">
+    String svgStringsvipnhat2 = '''<svg width="75" height="50" xmlns="http://www.w3.org/2000/svg">
 
   <path stroke="#000" id="svg_1" d="m0.823 12.223c-1.368-2.628-1.008-5.004 0.684-6.984 1.8-2.088 4.932-3.78 9.792-5.22 6.66 4.68 13.644 9.864 21.636 15.696 7.884 5.904 20.124 14.436 25.452 19.188 5.148 4.428 2.484 0.108 5.616 8.028 3.096 7.992 7.344 20.952 12.888 39.456 8.713-0.36 17.1 0.468 25.848 2.088 8.678 1.728 19.549 5.076 25.813 7.956 6.121 2.772 9.684 5.76 10.836 8.82l0.684 8.712-2.088 1.404c-5.939 26.712-10.08 50.58-12.563 72.576-2.521 21.889-2.232 39.744-2.449 58.283-0.287 18.504-0.107 35.354 0.684 51.66-17.459 5.113-33.947 7.344-50.58 6.984-16.559-0.469-32.471-3.564-48.167-9.432-2.556-31.752-5.328-62.064-8.748-92.484-3.384-30.42-7.272-59.544-11.52-88.632l-2.448-1.08v-8.028c3.816-6.192 10.656-10.764 20.952-14.112 10.296-3.276 23.4-5.184 40.14-5.58l-12.564-34.74c-8.496-5.76-16.776-11.268-25.128-17.1-8.42-5.827-16.484-11.551-24.764-17.455z"/>
       <path d="m9.175 2.107c-3.24 1.332-5.4 2.592-6.624 4.176-1.26 1.44-1.44 4.176-0.684 4.896 0.792 0.612 3.78 0.108 5.22-0.684 1.116-0.828 1.98-2.88 2.448-4.212 0.504-1.476 0.792-2.736 0.72-4.176h-1.08z" fill="#fff"/>
@@ -540,8 +541,7 @@ class MapSampleState extends State<MapSample> {
     // toPicture() and toImage() don't seem to be pixel ratio aware, so we calculate the actual sizes here
     MediaQueryData queryData = MediaQuery.of(context);
     double devicePixelRatio = queryData.devicePixelRatio;
-    double width =
-        75 * devicePixelRatio; // where 32 is your SVG's original width
+    double width = 75 * devicePixelRatio; // where 32 is your SVG's original width
     double height = 50 * devicePixelRatio; // same thing
 
     // Convert to ui.Picture
@@ -644,6 +644,5 @@ class MapSampleState extends State<MapSample> {
 
   }
 */
-
 
 }

@@ -1,0 +1,69 @@
+{
+  "project_info": {
+    "project_number": "988871685191",
+    "firebase_url": "https://tactile-pulsar-298806-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "tactile-pulsar-298806",
+    "storage_bucket": "tactile-pulsar-298806.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988871685191:android:f05e5f36a8c9854f55ed62",
+        "android_client_info": {
+          "package_name": "com.example.delivery_app_dath"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "988871685191-lg4oio58llb0dl6hn9i2c725v2gos567.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFwF8aaUzJhDriVq7MK5pqaocn3nCPWsU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "988871685191-lg4oio58llb0dl6hn9i2c725v2gos567.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:988871685191:android:05ec1941258eb0a455ed62",
+        "android_client_info": {
+          "package_name": "com.example.testspappp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "988871685191-lg4oio58llb0dl6hn9i2c725v2gos567.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDFwF8aaUzJhDriVq7MK5pqaocn3nCPWsU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "988871685191-lg4oio58llb0dl6hn9i2c725v2gos567.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
